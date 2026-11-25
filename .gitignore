@@ -1,0 +1,3 @@
+# API key — jangan pernah di-commit.
+# Salin js/config.example.js menjadi js/config.js dan isi key Anda di sana.
+js/config.js
