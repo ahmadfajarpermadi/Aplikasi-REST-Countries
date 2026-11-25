@@ -119,9 +119,9 @@ Repo: <https://github.com/ahmadfajarpermadi/Aplikasi-REST-Countries>
 | Anggota | Peran | Fitur | Branch |
 |---------|-------|-------|--------|
 | Permadi (`ahmadfajarpermadi`) | Maintainer (ketua tim, pemilik repo) | Setup repo, Projects + Issues, lindungi `main`, review + merge PR; Fitur 4 — favorit + statistik | `feature/favorit-statistik` |
-| Muhammad Dzulhilmi (`MuhammadDzulhilmi`) | Developer | Fitur 1 — daftar + pencarian | `feature/daftar-pencarian` |
+| Muhammad Dzulhilmi (`MuhammadDzulhilmi`) | Developer | Fitur 3 — halaman detail | `feature/halaman-detail` |
 | Johannes Rivano (`JohannesRivanoFF`) | Developer | Fitur 2 — filter region + sorting | `feature/filter-sorting` |
-| Muhammad Elfanda (`Muhammad-Elfanda`) | Developer | Fitur 3 — halaman detail | `feature/halaman-detail` |
+| Muhammad Elfanda (`Muhammad-Elfanda`) | Developer | Fitur 1 — daftar + pencarian | `feature/daftar-pencarian` |
 
 Dosen (`rudyekoprasetya`) diundang sebagai collaborator.
 
