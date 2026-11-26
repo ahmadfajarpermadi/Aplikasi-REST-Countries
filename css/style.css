@@ -69,14 +69,78 @@ a { color: #0b5fff; }
 .fav-btn.is-fav { background: #fff7d6; border-color: #d9a400; }
 
 .pagination {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-top: 1.2rem; gap: 0.5rem; flex-wrap: wrap;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+  padding: 0.9rem 1.1rem;
+  background: #ffffff;
+  border: 1px solid #dde3e9;
+  border-radius: 8px;
+  gap: 1rem;
+  flex-wrap: wrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
+
+.pagination-info {
+  font-size: 0.92rem;
+  color: #55606e;
+}
+
+.pagination-info strong {
+  color: #1c2430;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
 .pagination button {
-  padding: 0.5rem 0.9rem; font-size: 0.95rem;
-  border: 1px solid #c3ccd6; border-radius: 6px; background: #fff; cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.3rem;
+  height: 2.3rem;
+  padding: 0 0.65rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: inherit;
+  color: #1c2430;
+  border: 1px solid #c3ccd6;
+  border-radius: 6px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
 }
-.pagination button:disabled { opacity: 0.45; cursor: default; }
+
+.pagination button:hover:not(:disabled) {
+  border-color: #0b5fff;
+  color: #0b5fff;
+  background: #f0f6ff;
+}
+
+.pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #f8fafb;
+}
+
+.pagination button.is-active {
+  background: #0b5fff;
+  color: #ffffff;
+  border-color: #0b5fff;
+  font-weight: 700;
+  box-shadow: 0 2px 4px rgba(11, 95, 255, 0.25);
+}
 
 .empty { background: #fff; border: 1px solid #dde3e9; border-radius: 8px; padding: 1rem; }
 
@@ -121,3 +185,122 @@ table.facts tr:last-child th, table.facts tr:last-child td { border-bottom: none
   .site-header h1 { font-size: 1.5rem; }
   table.facts th { width: 120px; }
 }
+
+/* ==========================================================================
+   Fitur 2: Filter Region & Sorting UI (Johannes Rivano)
+   ========================================================================== */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  background: #ffffff;
+  padding: 0.85rem 1.1rem;
+  border: 1px solid #dde3e9;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  margin-bottom: 1.25rem;
+}
+
+.filter-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.filter-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #3b4654;
+  white-space: nowrap;
+}
+
+.filter-icon {
+  font-size: 1.05rem;
+}
+
+.filter-select {
+  padding: 0.5rem 0.8rem;
+  font-size: 0.92rem;
+  font-family: inherit;
+  color: #1c2430;
+  background-color: #f8fafb;
+  border: 1px solid #c3ccd6;
+  border-radius: 6px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease-in-out;
+}
+
+.filter-select:hover {
+  background-color: #ffffff;
+  border-color: #0b5fff;
+}
+
+.filter-select:focus {
+  background-color: #ffffff;
+  border-color: #0b5fff;
+  box-shadow: 0 0 0 3px rgba(11, 95, 255, 0.18);
+}
+
+.filter-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #c92a2a;
+  background: #fff5f5;
+  border: 1px solid #ffc9c9;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-left: auto;
+  transition: all 0.15s ease-in-out;
+}
+
+.filter-reset-btn:hover {
+  background: #ffe3e3;
+  border-color: #fa5252;
+}
+
+.filter-info-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #eef5ff;
+  border: 1px solid #d0e2ff;
+  border-radius: 6px;
+  padding: 0.5rem 0.85rem;
+  margin-bottom: 1rem;
+  font-size: 0.92rem;
+  color: #0b5fff;
+}
+
+.filter-info-badge strong {
+  color: #003a9b;
+}
+
+@media (max-width: 640px) {
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .filter-group {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.25rem;
+  }
+  .filter-select {
+    width: 100%;
+  }
+  .filter-reset-btn {
+    margin-left: 0;
+    justify-content: center;
+  }
+}
+
