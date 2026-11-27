@@ -1,5 +1,4 @@
-// Uji kerangka awal: hanya plumbing (klien API + utilitas + stub fitur).
-// Uji fitur 1-4 ditulis tim masing-masing saat mengerjakan fiturnya.
+// Uji kerangka awal: plumbing + Fitur 2 (Filter Region & Sorting).
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
@@ -16,7 +15,13 @@ import {
   sortCountries,
 } from '../js/utils.js';
 import { listHtml, paginationHtml } from '../js/feature-list.js';
-import { filterBarHtml, REGIONS, SORT_OPTIONS } from '../js/feature-filter.js';
+import {
+  filterBarHtml,
+  filterCountriesByRegion,
+  applyFilterAndSort,
+  REGIONS,
+  SORT_OPTIONS,
+} from '../js/feature-filter.js';
 import { detailHtml } from '../js/feature-detail.js';
 import { loadFavorites, statsHtml, toggleFavorite } from '../js/feature-favorites.js';
 
@@ -109,19 +114,74 @@ test('computeStats: total, dimuat, favorit', () => {
   assert.equal(s.mostPopulous.name, 'Algeria');
 });
 
-// --- Stub fitur: kontrak antarmuka masih ada, isi TODO ---
-test('stub Fitur 1-4 mengembalikan penanda TODO', () => {
+// --- Stub fitur lain yang masih dikerjakan tim ---
+test('stub Fitur 1, 3, 4 mengembalikan penanda TODO', () => {
   assert.match(listHtml([], new Set()), /TODO Fitur 1/);
   assert.equal(paginationHtml({}, 0, 25), '');
-  assert.match(filterBarHtml({}), /TODO Fitur 2/);
   assert.match(detailHtml({}, false), /TODO Fitur 3/);
   assert.match(statsHtml({}, false), /TODO Fitur 4/);
 });
 
-test('stub Fitur 2: konstanta region + sorting lengkap', () => {
+// --- Fitur 2: Filter Region & Sorting (Johannes Rivano) ---
+test('Fitur 2: konstanta region & sort options lengkap', () => {
   assert.ok(REGIONS.includes('Asia'));
   assert.ok(REGIONS.includes('Europe'));
+  assert.ok(REGIONS.includes('Africa'));
+  assert.ok(REGIONS.includes('Americas'));
+  assert.ok(REGIONS.includes('Oceania'));
+  assert.ok(REGIONS.includes('Antarctic'));
   assert.equal(SORT_OPTIONS.length, 4);
+});
+
+test('Fitur 2: filterBarHtml menghasilkan select region dan select sorting lengkap', () => {
+  const html = filterBarHtml();
+  assert.ok(html.includes('id="filter-region"'));
+  assert.ok(html.includes('id="sort-select"'));
+  assert.ok(html.includes('Semua Region'));
+  for (const reg of REGIONS) {
+    assert.ok(html.includes(`value="${reg}"`));
+  }
+  for (const opt of SORT_OPTIONS) {
+    assert.ok(html.includes(`value="${opt.value}"`));
+  }
+});
+
+test('Fitur 2: filterBarHtml menandai opsi terpilih sesuai state & menampilkan reset', () => {
+  const html = filterBarHtml({ region: 'Asia', sort: 'populasi-desc' });
+  assert.ok(html.includes('value="Asia" selected'));
+  assert.ok(html.includes('value="populasi-desc" selected'));
+  assert.ok(html.includes('id="filter-reset-btn"'));
+});
+
+test('Fitur 2: filterCountriesByRegion memfilter daftar berdasarkan region', () => {
+  const sample = [
+    { name: 'Indonesia', region: 'Asia' },
+    { name: 'Jepang', region: 'Asia' },
+    { name: 'Jerman', region: 'Europe' },
+  ];
+  const asia = filterCountriesByRegion(sample, 'Asia');
+  assert.equal(asia.length, 2);
+  const europe = filterCountriesByRegion(sample, 'Europe');
+  assert.equal(europe.length, 1);
+  assert.equal(europe[0].name, 'Jerman');
+  const all = filterCountriesByRegion(sample, '');
+  assert.equal(all.length, 3);
+});
+
+test('Fitur 2: applyFilterAndSort memfilter dan mengurutkan secara berurutan', () => {
+  const sample = [
+    { name: 'Vietnam', region: 'Asia', population: 98000000 },
+    { name: 'Indonesia', region: 'Asia', population: 275000000 },
+    { name: 'Prancis', region: 'Europe', population: 67000000 },
+  ];
+  const res = applyFilterAndSort(sample, { region: 'Asia', sort: 'nama-az' });
+  assert.equal(res.length, 2);
+  assert.equal(res[0].name, 'Indonesia');
+  assert.equal(res[1].name, 'Vietnam');
+
+  const resPop = applyFilterAndSort(sample, { region: 'Asia', sort: 'populasi-desc' });
+  assert.equal(resPop[0].name, 'Indonesia');
+  assert.equal(resPop[1].name, 'Vietnam');
 });
 
 test('stub Fitur 4: favorit awal kosong', () => {
