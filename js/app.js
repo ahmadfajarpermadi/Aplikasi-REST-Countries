@@ -1,14 +1,16 @@
 // Bootstrap aplikasi: Jelajah Negara — REST Client
-// Mengintegrasikan Fitur 2 (Filter Region & Sorting oleh Johannes Rivano)
-// Dilengkapi Pagination lengkap (menjelajah seluruh 254 negara per halaman)
-import { fetchCountryList, hasRealKey, isDemoMode, PAGE_SIZE } from './api.js';
+// Mengintegrasikan Fitur 2 (Filter Region & Sorting) dan Fitur 3 (Halaman Detail)
+import { fetchCountryList, fetchCountryDetail, hasRealKey, isDemoMode } from './api.js';
 import { filterBarHtml, sortCountries } from './feature-filter.js';
+import { detailHtml } from './feature-detail.js';
 import { flagImageUrl, formatNumber, escapeHtml } from './utils.js';
 
 const view = document.getElementById('view');
 const statusEl = document.getElementById('status');
 
 const state = {
+  viewMode: 'list', // 'list' atau 'detail'
+  selectedCountry: null,
   region: '',
   sort: 'nama-az',
   limit: 24,
@@ -39,15 +41,19 @@ function countryCardHtml(c) {
     ? `<img src="${escapeHtml(flagSrc)}" alt="Bendera ${escapeHtml(c.name)}" class="card-flag" loading="lazy">`
     : `<div class="card-flag card-flag--empty">${escapeHtml(c.emoji || '🏳️')}</div>`;
 
+  const detailKey = escapeHtml(c.detailKey || c.alpha3 || c.name);
+
   return `
     <article class="card">
-      ${flagEl}
-      <div class="card-content">
-        <h3 style="margin: 0.6rem 0 0.3rem; font-size: 1.05rem;">${escapeHtml(c.name)}</h3>
-        <p class="card-meta"><strong>Region:</strong> ${escapeHtml(c.region || '-')}</p>
-        <p class="card-meta"><strong>Ibu kota:</strong> ${escapeHtml(c.capital || '-')}</p>
-        <p class="card-meta"><strong>Populasi:</strong> ${formatNumber(c.population)} jiwa</p>
-      </div>
+      <a href="#/detail/${encodeURIComponent(c.detailKey || c.alpha3 || c.name)}" class="card-link" data-detail-key="${detailKey}">
+        ${flagEl}
+        <div class="card-content">
+          <h3 style="margin: 0.6rem 0 0.3rem; font-size: 1.05rem;">${escapeHtml(c.name)}</h3>
+          <p class="card-meta"><strong>Region:</strong> ${escapeHtml(c.region || '-')}</p>
+          <p class="card-meta"><strong>Ibu kota:</strong> ${escapeHtml(c.capital || '-')}</p>
+          <p class="card-meta"><strong>Populasi:</strong> ${formatNumber(c.population)} jiwa</p>
+        </div>
+      </a>
     </article>
   `;
 }
@@ -62,7 +68,6 @@ function renderPaginationHtml(meta, offset, limit) {
   const startItem = offset + 1;
   const endItem = Math.min(offset + limit, total);
 
-  // Buat tombol nomor halaman (maksimal 5 nomor di sekitar halaman aktif)
   const maxButtons = 5;
   let startPage = Math.max(1, currentPage - 2);
   let endPage = Math.min(totalPages, startPage + maxButtons - 1);
@@ -104,7 +109,39 @@ function renderPaginationHtml(meta, offset, limit) {
   `;
 }
 
+function renderDetailUI() {
+  view.innerHTML = detailHtml(state.selectedCountry, false);
+
+  const backBtn = document.getElementById('detail-back-btn');
+  if (backBtn) {
+    backBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      state.viewMode = 'list';
+      state.selectedCountry = null;
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+      if (state.countries.length > 0) {
+        renderUI();
+      } else {
+        loadData();
+      }
+    });
+  }
+
+  view.querySelectorAll('.border-link').forEach((link) => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const key = link.getAttribute('data-detail-key');
+      if (key) openCountryDetail(key);
+    });
+  });
+}
+
 function renderUI() {
+  if (state.viewMode === 'detail') {
+    renderDetailUI();
+    return;
+  }
+
   const sorted = sortCountries(state.countries, state.sort);
   const filterHtml = filterBarHtml(state);
   const paginationHtmlContent = renderPaginationHtml(state.meta, state.offset, state.limit);
@@ -133,7 +170,7 @@ function renderUI() {
 
   view.innerHTML = `
     <div class="feature-badge" style="margin-bottom: 0.75rem; font-size: 0.85rem; color: #55606e;">
-    <strong>Fitur 2 Aktif:</strong> Filter Region &amp; Sorting (oleh Johannes Rivano)
+      <strong>Fitur Aktif:</strong> Filter Region &amp; Sorting + Halaman Detail Negara (klik kartu negara untuk melihat detail)
     </div>
     ${filterHtml}
     ${infoBadge}
@@ -152,7 +189,7 @@ function attachEvents() {
   if (regionSelect) {
     regionSelect.addEventListener('change', (e) => {
       state.region = e.target.value;
-      state.offset = 0; // Reset ke halaman 1 saat region diubah
+      state.offset = 0;
       loadData();
     });
   }
@@ -168,10 +205,19 @@ function attachEvents() {
     resetBtn.addEventListener('click', () => {
       state.region = '';
       state.sort = 'nama-az';
-      state.offset = 0; // Reset ke halaman 1
+      state.offset = 0;
       loadData();
     });
   }
+
+  // Klik kartu negara untuk membuka halaman detail (Fitur 3)
+  view.querySelectorAll('.card-link').forEach((link) => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const key = link.getAttribute('data-detail-key');
+      if (key) openCountryDetail(key);
+    });
+  });
 
   // Event listener tombol-tombol pagination
   const paginationControls = document.querySelector('.pagination-controls');
@@ -187,7 +233,6 @@ function attachEvents() {
       state.offset = (targetPage - 1) * state.limit;
       loadData();
 
-      // Scroll halus ke atas menuju container view
       const viewEl = document.getElementById('view');
       if (viewEl) {
         window.scrollTo({
@@ -196,6 +241,23 @@ function attachEvents() {
         });
       }
     });
+  }
+}
+
+async function openCountryDetail(key) {
+  statusEl.textContent = `Memuat detail negara (${key})…`;
+  statusEl.classList.remove('status--error');
+  try {
+    const country = await fetchCountryDetail(key);
+    state.viewMode = 'detail';
+    state.selectedCountry = country;
+    window.location.hash = `#/detail/${encodeURIComponent(key)}`;
+    statusEl.textContent = '';
+    renderDetailUI();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (err) {
+    statusEl.textContent = `Gagal memuat detail negara: ${err.message}`;
+    statusEl.classList.add('status--error');
   }
 }
 
@@ -217,8 +279,30 @@ async function loadData() {
   }
 }
 
+window.addEventListener('hashchange', () => {
+  const hash = window.location.hash;
+  if (hash.startsWith('#/detail/')) {
+    const key = decodeURIComponent(hash.replace('#/detail/', ''));
+    if (key) openCountryDetail(key);
+  } else if (state.viewMode === 'detail') {
+    state.viewMode = 'list';
+    state.selectedCountry = null;
+    if (state.countries.length > 0) {
+      renderUI();
+    } else {
+      loadData();
+    }
+  }
+});
+
 if (!hasRealKey() && !isDemoMode()) {
   view.innerHTML = setupNoticeHtml();
 } else {
-  loadData();
+  const initialHash = window.location.hash;
+  if (initialHash.startsWith('#/detail/')) {
+    const key = decodeURIComponent(initialHash.replace('#/detail/', ''));
+    openCountryDetail(key);
+  } else {
+    loadData();
+  }
 }
